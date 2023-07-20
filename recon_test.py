@@ -2,12 +2,11 @@ import torch
 
 from nvae.dataset import ImageFolderDataset
 from nvae.utils import add_sn
-from nvae.vae_celeba import NVAE
+from nvae.nvae import NVAE
 import numpy as np
 import matplotlib.pyplot as plt
 
-if __name__ == '__main__':
-
+if __name__ == "__main__":
     train_ds = ImageFolderDataset("G:\data\GAN\celeba\img_align_celeba", img_dim=64)
 
     device = "cpu"
@@ -15,7 +14,10 @@ if __name__ == '__main__':
     model.apply(add_sn)
     model.to(device)
 
-    model.load_state_dict(torch.load("checkpoints/ae_ckpt_3_0.795224.pth", map_location=device), strict=False)
+    model.load_state_dict(
+        torch.load("checkpoints/ae_ckpt_3_0.795224.pth", map_location=device),
+        strict=False,
+    )
 
     model.eval()
 

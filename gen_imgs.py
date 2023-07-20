@@ -2,10 +2,9 @@ import numpy as np
 import torch
 
 from nvae.utils import add_sn
-from nvae.vae_celeba import NVAE
+from nvae.nvae import NVAE
 
-if __name__ == '__main__':
-
+if __name__ == "__main__":
     img_size = 64
     z_dim = 512
     cols, rows = 12, 12
@@ -17,7 +16,10 @@ if __name__ == '__main__':
     model.apply(add_sn)
     model.to(device)
 
-    model.load_state_dict(torch.load("checkpoints/ae_ckpt_0_0.761000.pth", map_location=device), strict=False)
+    model.load_state_dict(
+        torch.load("checkpoints/ae_ckpt_0_0.761000.pth", map_location=device),
+        strict=False,
+    )
 
     model.eval()
 
@@ -34,7 +36,9 @@ if __name__ == '__main__':
 
     for i in range(rows):
         for j in range(cols):
-            result[i * img_size:(i + 1) * img_size, j * img_size:(j + 1) * img_size] = gen_imgs[i, j]
+            result[
+                i * img_size : (i + 1) * img_size, j * img_size : (j + 1) * img_size
+            ] = gen_imgs[i, j]
 
     from PIL import Image
 

@@ -1,17 +1,20 @@
 import torch
 
 from nvae.utils import add_sn
-from nvae.vae_celeba import NVAE
+from nvae.nvae import NVAE
 import numpy as np
 import matplotlib.pyplot as plt
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     device = "cpu"
     model = NVAE(z_dim=512, img_dim=(64, 64))
     model.apply(add_sn)
     model.to(device)
 
-    model.load_state_dict(torch.load("checkpoints/ae_ckpt_169_0.689621.pth", map_location=device), strict=False)
+    model.load_state_dict(
+        torch.load("checkpoints/ae_ckpt_169_0.689621.pth", map_location=device),
+        strict=False,
+    )
 
     model.eval()
 
