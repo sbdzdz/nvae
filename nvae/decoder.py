@@ -54,7 +54,7 @@ class Decoder(nn.Module):
             [
                 DecoderBlock([z_dim * 2, z_dim // 2]),  # 2x upsample
                 DecoderBlock([z_dim, z_dim // 4, z_dim // 8]),  # 4x upsample
-                DecoderBlock([z_dim // 4, z_dim // 16, z_dim // 32]),  # 4x uplsampe
+                DecoderBlock([z_dim // 4, z_dim // 16, z_dim // 32]),  # 4x upsample
             ]
         )
         self.decoder_residual_blocks = nn.ModuleList(
@@ -134,8 +134,8 @@ class Decoder(nn.Module):
                     torch.cat([xs[i], decoder_out], dim=1)
                 ).chunk(2, dim=1)
                 kl_losses.append(kl_2(delta_mu, delta_log_var, mu, log_var))
-                mu += delta_mu
-                log_var += delta_log_var
+                mu = mu + delta_mu
+                log_var = log_var + delta_log_var
 
             if mode == "fix" and i < freeze_level:
                 if len(self.zs) < freeze_level + 1:
