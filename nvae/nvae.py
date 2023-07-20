@@ -45,5 +45,5 @@ class NVAE(nn.Module):
                 )[:, None]
             )
         )
-
         kl_loss = kl(mu, log_var)
+        return decoder_output, recon_loss, [kl_loss] + losses
