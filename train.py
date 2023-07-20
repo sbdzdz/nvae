@@ -73,7 +73,7 @@ class WarmupKLLoss:
 
 def main(args):
     """Main training routine."""
-    wandb.init(project="nvae", dir=args.wandb_dir)
+    wandb.init(project="nvae", dir=args.wandb_dir, entity="sebastiandziadzio")
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
     if args.dataset == "cifar":
@@ -115,7 +115,7 @@ def main(args):
     for _ in range(args.epochs):
         model.train()
 
-        for image in train_dataloader:
+        for image, _ in train_dataloader:
             optimizer.zero_grad()
             image = image.to(device)
             _, recon_loss, kl_losses = model(image)
