@@ -27,10 +27,10 @@ class EncoderBlock(nn.Module):
     def __init__(self, channels):
         super().__init__()
         self.channels = channels
-        modules = []
-        for i in range(len(channels) - 1):
-            modules.append(ConvBlock(channels[i], channels[i + 1]))
-
+        modules = [
+            ConvBlock(channels[i], channels[i + 1])
+            for i in range(len(channels) - 1)
+        ]
         self.modules_list = nn.ModuleList(modules)
 
     def forward(self, x):
