@@ -127,6 +127,10 @@ class Decoder(nn.Module):
         ):
             z_sample = torch.cat([decoder_out, z], dim=1)
             decoder_out = res_block(block(z_sample))
+
+            if i == len(self.condition_z):
+                break
+
             mu, log_var = self.condition_z[i](decoder_out).chunk(2, dim=1)
 
             if xs is not None:
