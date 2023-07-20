@@ -2,3 +2,5 @@ matplotlib
 torch
 torchvision
 wandb
+opencv-python
+h5py

@@ -18,5 +18,6 @@ source $WORK/virtualenvs/nvae/bin/activate
 
 python -m pip install --upgrade pip setuptools
 python -m pip install -r $HOME/nvae/requirements.txt
+pip install git+https://github.com/jonbarron/robust_loss_pytorch
 
-srun --gres=gpu:1 python $HOME/nvae/train.py --wandb_dir $WORK/projects/nvae/wandb
+srun --gres=gpu:1 python $HOME/nvae/train.py --wandb_dir $WORK/projects/nvae/wandb --dataset cifar
