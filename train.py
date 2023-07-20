@@ -12,7 +12,7 @@ from torchvision import transforms
 
 from nvae.dataset import ImageFolderDataset
 from nvae.utils import add_sn
-from nvae.vae_celeba import NVAE
+from nvae.nvae import NVAE
 
 
 class WarmupKLLoss:
@@ -73,37 +73,29 @@ class WarmupKLLoss:
 
 def main(args):
     """Main training routine."""
-    epochs = args.epochs
+    wandb.init(project="nvae", dir=args.wandb_dir)
+    device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
     if args.dataset == "cifar":
         train_dataset = torchvision.datasets.CIFAR10(
-            root=pathlib.Path(os.environ["WORK"]) / "cifar",
+            root=pathlib.Path(os.environ["WORK"]) / "datasets/cifar",
             train=True,
             download=True,
             transform=transforms.ToTensor(),
         )
     else:
         train_dataset = ImageFolderDataset(args.dataset, img_dim=64)
+
     train_dataloader = DataLoader(
-        train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.n_cpu
+        train_dataset,
+        batch_size=args.batch_size,
+        shuffle=True,
+        num_workers=args.num_workers,
     )
 
-    os.makedirs("checkpoints", exist_ok=True)
-    os.makedirs("output", exist_ok=True)
-
-    wandb.init(project="nvae", dir=args.wandb_dir)
-    device = "cuda:0" if torch.cuda.is_available() else "cpu"
     model = NVAE(z_dim=512, img_dim=(64, 64))
-
-    # apply Spectral Normalization
-    model.apply(add_sn)
-
+    model.apply(add_sn)  # spectral normalization
     model.to(device)
-
-    if args.pretrained_weights:
-        model.load_state_dict(
-            torch.load(args.pretrained_weights, map_location=device), strict=False
-        )
 
     warmup_kl = WarmupKLLoss(
         init_weights=[1.0, 1.0 / 2, 1.0 / 8],
@@ -120,13 +112,11 @@ def main(args):
     )
 
     step = 0
-
-    for _ in range(epochs):
+    for _ in range(args.epochs):
         model.train()
 
         for image in train_dataloader:
             optimizer.zero_grad()
-
             image = image.to(device)
             _, recon_loss, kl_losses = model(image)
             kl_loss = warmup_kl.get_loss(step, kl_losses)
@@ -138,10 +128,8 @@ def main(args):
                     "loss": loss.item(),
                 }
             )
-
             loss.backward()
             optimizer.step()
-
             step += 1
 
             if step != 0 and step % 100 == 0:
@@ -152,11 +140,9 @@ def main(args):
                     gen_img = gen_img[0].cpu().numpy() * 255
                     gen_img = gen_img.astype(np.uint8)
                     wandb.log({"samples_train": wandb.Image(gen_img)})
-
         scheduler.step()
 
         model.eval()
-
         with torch.no_grad():
             z = torch.randn((1, 512, 2, 2)).to(device)
             gen_img, _ = model.decoder(z)
@@ -167,9 +153,6 @@ def main(args):
 
 
 if __name__ == "__main__":
-    LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
-    logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
-
     parser = argparse.ArgumentParser(description="Trainer for state AutoEncoder model.")
     parser.add_argument("--epochs", type=int, default=500, help="number of epochs.")
     parser.add_argument(
@@ -182,15 +165,10 @@ if __name__ == "__main__":
         "--wandb_dir", type=str, default="wandb", help="wandb directory"
     )
     parser.add_argument(
-        "--pretrained_weights",
-        type=str,
-        help="if specified starts from checkpoint model",
-    )
-    parser.add_argument(
-        "--n_cpu",
+        "--num_workers",
         type=int,
         default=16,
-        help="number of cpu threads to use during batch generation",
+        help="number of cpu workers to use during batch generation",
     )
     args = parser.parse_args()
     main(args)
